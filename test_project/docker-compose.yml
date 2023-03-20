@@ -1,0 +1,90 @@
+version: '3.9'
+
+services:
+  db:
+    container_name: postgres
+    image: postgres:14.6
+    volumes:
+      - ./WebService/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./WebService/postgres_data:/var/lib/postgresql/data/
+      - .:/app
+    environment: 
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - "POSTGRES_HOST_AUTH_METHOD=trust"
+    restart: "on-failure"
+    networks:
+      - assemble
+
+  nginx:
+    build: ./nginx
+    networks:
+      - assemble
+    volumes:
+    - ./nginx/cert:/nginx/cert
+    ports:
+      - "80:80"
+      - "443:433"
+    depends_on:
+      - db
+      - daphne
+  
+  redis:
+    image: redis:6.2.6-alpine
+    networks:
+      - assemble
+    ports:
+      - 6379:6379
+    depends_on:
+      - db
+
+  daphne:
+    build:
+      context: ./WebService
+      dockerfile: Dockerfile
+    image: latest
+    volumes: 
+      - ./static:/engine_side/static
+      - .:/app
+    networks:
+      - assemble
+    depends_on:
+      - db
+      - gunicorn
+      - redis
+    ports:
+      - 9000:9000
+    expose:
+      - 9000
+
+  gunicorn:
+    build:
+      context: ./WebService
+      dockerfile: Dockerfile
+    volumes: 
+      - .:/app
+      - ./static:/engine_side/static
+    environment:
+      - DJANGO_SUPERUSER_USERNAME=${DJANGO_SU_USERNAME}
+      - DJANGO_SUPERUSER_PASSWORD=${DJANGO_SU_PASSWORD}
+      - DJANGO_SUPERUSER_EMAIL=${DJANGO_SU_EMAIL}
+      - POSTGRES_NAME=${DB_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    restart: "on-failure"
+    depends_on:
+      - db
+    networks:
+      - assemble
+    ports:
+      - 8000:8000
+    expose:
+      - 8000
+
+networks:
+  assemble:
+
+volumes:
+  postgres_data:
+  static:

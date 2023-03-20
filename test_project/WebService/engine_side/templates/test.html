@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title %}Calculate Factorial{% endblock %}
+{% block content%}
+<!DOCTYPE html>
+<html>
+<head>
+	<title>WebSocket Example</title>
+</head>
+{% csrf_token %}
+<body>
+	<form id="number-form">
+		<label for="number-input">Enter a number:</label>
+		<input type="number" id="number-input" name="number">
+		<button type="submit">Calculate</button>
+	</form>
+	<br>
+	<label for="response">Response:</label>
+	<pre id="response"></pre>
+	<script>
+		var socket = new WebSocket('ws://localhost/ws/');
+		socket.onopen = function(event) {
+			console.log('WebSocket is connected.');
+		};
+
+		socket.onmessage = function(event) {
+			var response = JSON.parse(event.data);
+			document.getElementById("response").textContent = JSON.stringify(response, undefined, 2);
+			console.log(event.data);
+		};
+		socket.onerror = function(event) {
+			console.error('WebSocket error: ', event);
+		  };
+		  
+		socket.onclose = function(event) {
+			console.log('WebSocket is closed. Reconnecting...');
+			setTimeout(function() {
+			  socket = new WebSocket('ws://localhost/ws/endpoint/');
+			}, 5000);
+		  };
+
+		var form = document.getElementById("number-form");
+		form.addEventListener("submit", function(event) {
+			event.preventDefault();
+			var numberInput = document.getElementById("number-input");
+			var number = numberInput.value;
+			var message = {
+				'action': 'calculate',
+				'value': number
+			};
+			socket.send(JSON.stringify(message));
+		});
+	</script>
+</body>
+</html>
+{% endblock %}
