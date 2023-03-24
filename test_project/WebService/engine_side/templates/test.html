@@ -49,6 +49,18 @@
 			};
 			socket.send(JSON.stringify(message));
 		});
+
+		var form = document.getElementById("number-form");
+		form.addEventListener("submit", function(event) {
+			event.preventDefault();
+			var numberInput = document.getElementById("number-input");
+			var number = numberInput.value;
+			var message = {
+				'action': 'Check if number is perfect',
+				'value': number
+			};
+			socket.send(JSON.stringify(message));
+		});
 	</script>
 </body>
 </html>
