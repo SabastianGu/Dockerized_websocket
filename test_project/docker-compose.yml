@@ -12,7 +12,11 @@ services:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - "POSTGRES_HOST_AUTH_METHOD=trust"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: "on-failure"
     networks:
       - assemble
@@ -50,9 +54,8 @@ services:
     networks:
       - assemble
     depends_on:
-      - db
-      - gunicorn
-      - redis
+      db:
+        condition: service_healthy
     ports:
       - 9000:9000
     expose:
@@ -74,13 +77,15 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     restart: "on-failure"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - assemble
     ports:
       - 8000:8000
     expose:
       - 8000
+    
 
 networks:
   assemble:
