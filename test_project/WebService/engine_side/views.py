@@ -54,4 +54,4 @@ def contact_view(request):
 @login_required
 def test(request):
 	token = create_token(user_id=request.user.id)
-	return render(request, 'reg.html', {'token':token})
+	return render(request, 'test.html', {'token':token})
