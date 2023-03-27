@@ -13,7 +13,7 @@ services:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
+      test: [ "CMD", "pg_isready", "-q", "-d", "exampledb", "-U", "postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -51,6 +51,11 @@ services:
     volumes: 
       - ./static:/engine_side/static
       - .:/app
+    environment:
+      - POSTGRES_NAME=${DB_NAME}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SERVICE_NAME=daphne
     networks:
       - assemble
     depends_on:
@@ -75,6 +80,7 @@ services:
       - POSTGRES_NAME=${DB_NAME}
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - SERVICE_NAME=gunicorn
     restart: "on-failure"
     depends_on:
       db:
