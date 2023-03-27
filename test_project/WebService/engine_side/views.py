@@ -51,7 +51,8 @@ def contact_view(request):
     return render(request, 'info.html', context)
 
 @ensure_csrf_cookie
-@login_required
 def test(request):
-	token = create_token(user_id=request.user.id)
-	return render(request, 'test.html', {'token':token})
+    if not request.user.is_authenticated:
+        return redirect('login')
+    token = create_token(user_id=request.user.id)
+    return render(request, 'test.html', {'token': token})
