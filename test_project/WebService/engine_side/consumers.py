@@ -33,29 +33,30 @@ class TheConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         try:
             data = json.loads(text_data)
-            action = data.get('action')
-            value = data.get('value')
+        except json.JSONDecodeError:
+            response = {'error':"Invalid data format. Please, try again"}
+            await self.send(json.dumps(response))
+        action = data.get('action')
+        value = data.get('value')
 
-            if action == self.CALCULATE_ACTION:
+        if action == self.CALCULATE_ACTION:
                 try:
                     number = int(value)
                     result = math.factorial(number)
                     response = {'result': result}
                 except ValueError:
                     response = {'error': 'Invalid input'}
-            elif action == self.PERFECT_ACTION:
+        elif action == self.PERFECT_ACTION:
                 try:
                     number = int(value)
                     result, explanation = self.calculate_perfect_number(number)
                     response = {'result': result, 'explanation': explanation}
                 except ValueError:
                     response = {'error': 'Invalid input'}
-            else:
-                response = {'error': 'Invalid action'}
+        else:
+            response = {'error': 'Invalid action'}
 
-            await self.send(json.dumps(response))
-        except Exception as e:
-            print(f"Failed to handle WebSocket message: {e}")
+        await self.send(json.dumps(response))
 
     def calculate_perfect_number(self, number):
         if number <= 0:
